@@ -1061,6 +1061,26 @@ describe 'sshd_config_print_last_log param' do
     end
   end
 
+  describe 'with sshd_config_rhostsrsaauthentication' do
+    ['yes','no'].each do |value|
+      context "set to #{value}" do
+        let(:params) { { 'sshd_config_rhostsrsaauthentication' => value } }
+
+        it { should contain_file('sshd_config').with_content(/^RhostsRSAAuthentication #{value}$/) }
+      end
+    end
+
+    context 'set to invalid value on valid osfamily' do
+      let(:params) { { :sshd_config_rhostsrsaauthentication => 'invalid' } }
+
+      it 'should fail' do
+        expect {
+          should contain_class('ssh')
+        }.to raise_error(Puppet::Error,/ssh::sshd_config_rhostsrsaauthentication may be either \'yes\' or \'no\' and is set to <invalid>\./)
+      end
+    end
+  end
+
   describe 'with sshd_config_permituserenvironment' do
     ['yes','no'].each do |value|
       context "set to #{value}" do
@@ -2485,6 +2505,48 @@ describe 'sshd_config_print_last_log param' do
     ['false',false].each do |value|
       context "as #{value}" do
         let(:params) { { :ssh_key_import => value } }
+
+        it { should compile.with_all_deps }
+
+        it { should contain_class('ssh') }
+      end
+    end
+  end
+
+  describe 'with ssh_key_export parameter specified' do
+    context 'as a non-boolean or non-string' do
+    let(:params) { { :ssh_key_export => ['not_a_boolean','or_a_string'] } }
+
+      it 'should fail' do
+        expect {
+          should contain_class('ssh')
+        }.to raise_error(Puppet::Error)
+      end
+    end
+
+    context 'as an invalid string' do
+      let(:params) { { :ssh_key_export => 'invalid_string' } }
+
+      it 'should fail' do
+        expect {
+          should contain_class('ssh')
+        }.to raise_error(Puppet::Error,/ssh::ssh_key_export may be either 'true' or 'false' and is set to <invalid_string>\./)
+      end
+    end
+
+    ['true',true].each do |value|
+      context "as #{value}" do
+        let(:params) { { :ssh_key_export => value } }
+
+        it { should compile.with_all_deps }
+
+        it { should contain_class('ssh') }
+      end
+    end
+
+    ['false',false].each do |value|
+      context "as #{value}" do
+        let(:params) { { :ssh_key_export => value } }
 
         it { should compile.with_all_deps }
 

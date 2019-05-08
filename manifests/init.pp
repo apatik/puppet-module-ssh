@@ -102,6 +102,7 @@ class ssh (
   $service_hasrestart                     = true,
   $service_hasstatus                      = 'USE_DEFAULTS',
   $ssh_key_ensure                         = 'present',
+  $ssh_key_export                         = true,
   $ssh_key_import                         = true,
   $ssh_key_type                           = 'ssh-rsa',
   $ssh_config_global_known_hosts_file     = '/etc/ssh/ssh_known_hosts',
@@ -122,6 +123,7 @@ class ssh (
   $sshd_config_key_revocation_list        = undef,
   $sshd_config_authorized_principals_file = undef,
   $sshd_config_allowagentforwarding       = undef,
+  $sshd_config_rhostsrsaauthentication    = undef,
 ) {
 
   case $::osfamily {
@@ -807,6 +809,20 @@ class ssh (
     }
   }
 
+  case type3x($ssh_key_export) {
+    'string': {
+      validate_re($ssh_key_export, '^(true|false)$', "ssh::ssh_key_export may be either 'true' or 'false' and is set to <${ssh_key_export}>.")
+      $ssh_key_export_real = str2bool($ssh_key_export)
+    }
+    'boolean': {
+      $ssh_key_export_real = $ssh_key_export
+    }
+    default: {
+      fail('ssh::ssh_key_export type must be true or false.')
+    }
+  }
+  validate_bool($ssh_key_export_real)
+
   case type3x($ssh_key_import) {
     'string': {
       validate_re($ssh_key_import, '^(true|false)$', "ssh::ssh_key_import may be either 'true' or 'false' and is set to <${ssh_key_import}>.")
@@ -849,11 +865,14 @@ class ssh (
     'ssh-dsa','dsa': {
       $key = $::sshdsakey
     }
-    'ecdsa-sha2-nistp256': {
+    'ssh-ed25519', 'ed25519': {
+      $key = $::sshed25519key
+    }
+    'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521': {
           $key = $::sshecdsakey
     }
     default: {
-      fail("ssh::ssh_key_type must be 'ecdsa-sha2-nistp256', 'ssh-rsa', 'rsa', 'ssh-dsa', or 'dsa' and is <${ssh_key_type}>.")
+      fail("ssh::ssh_key_type must be 'ssh-rsa', 'rsa', 'ssh-dsa', 'dsa', 'ssh-ed25519', 'ed25519', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', or 'ecdsa-sha2-nistp521' and is <${ssh_key_type}>.")
     }
   }
 
@@ -995,6 +1014,10 @@ class ssh (
     validate_re($sshd_config_allowagentforwarding, '^(yes|no)$', "ssh::sshd_config_allowagentforwarding may be either 'yes' or 'no' and is set to <${sshd_config_allowagentforwarding}>.")
   }
 
+  if $sshd_config_rhostsrsaauthentication != undef {
+    validate_re($sshd_config_rhostsrsaauthentication, '^(yes|no)$', "ssh::sshd_config_rhostsrsaauthentication may be either 'yes' or 'no' and is set to <${sshd_config_rhostsrsaauthentication}>.")
+  }
+
   package { $packages_real:
     ensure    => installed,
     source    => $ssh_package_source_real,
@@ -1086,11 +1109,13 @@ class ssh (
   else { $host_aliases = [$::hostname, $::ipaddress] }
 
   # export each node's ssh key
-  @@sshkey { $::fqdn :
-    ensure       => $ssh_key_ensure,
-    host_aliases => $host_aliases,
-    type         => $ssh_key_type,
-    key          => $key,
+  if $ssh_key_export_real == true {
+    @@sshkey { $::fqdn :
+      ensure       => $ssh_key_ensure,
+      host_aliases => $host_aliases,
+      type         => $ssh_key_type,
+      key          => $key,
+    }
   }
 
   file { 'ssh_known_hosts':
