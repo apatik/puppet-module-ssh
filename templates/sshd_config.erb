@@ -95,6 +95,9 @@ AuthorizedKeysCommandUser <%= @sshd_authorized_keys_command_user %>
 
 # For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
 #RhostsRSAAuthentication no
+<% if @sshd_config_rhostsrsaauthentication != nil -%>
+RhostsRSAAuthentication <%= @sshd_config_rhostsrsaauthentication %>
+<% end -%>
 # similar for protocol version 2
 #HostbasedAuthentication no
 HostbasedAuthentication <%= @sshd_hostbasedauthentication %>

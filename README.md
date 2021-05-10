@@ -260,6 +260,13 @@ Valid values are 'yes' and 'no'.
 
 - *Default*: undef
 
+sshd_config_rhostsrsaauthentication
+-----------------------------------
+RhostsRSAAuthentication option in sshd_config. Specifies whether rhosts or /etc/hosts.equiv authentication together with successful RSA host authentication is allowed. This option applies to protocol version 1 only (not the default).
+Valid values are 'yes' and 'no'.
+
+- *Default*: undef
+
 sshd_config_permituserenvironment
 ---------------------------------
 PermitUserEnvironment option in sshd_config.  Specifies whether ~/.ssh/environment and environment= options in ~/.ssh/authorized_keys are processed by sshd(8).  The default is “no”.  Enabling environment processing may enable users to bypass access restrictions in some configurations using mechanisms such as LD_PRELOAD.
@@ -807,6 +814,12 @@ Export node SSH key. Valid values are 'present' and 'absent'.
 
 - *Default*: 'present'
 
+ssh_key_export
+--------------
+Export this hosts' SSH host key. Valid values are 'true and 'false'.
+
+- *Default*: 'true'
+
 ssh_key_import
 --------------
 Import all exported node SSH keys. Valid values are 'true' and 'false'.
@@ -815,7 +828,7 @@ Import all exported node SSH keys. Valid values are 'true' and 'false'.
 
 ssh_key_type
 ------------
-Encryption type for SSH key. Valid values are 'ecdsa-sha2-nistp256', 'rsa', 'dsa', 'ssh-dss' and 'ssh-rsa'
+Encryption type for SSH key. Valid values are 'rsa', 'dsa', 'ssh-dss', 'ssh-rsa', 'ssh-ed25519', 'ed25519', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', and 'ecdsa-sha2-nistp521'
 
 - *Default*: 'ssh-rsa'
 
